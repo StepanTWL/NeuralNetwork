@@ -7,16 +7,24 @@ import matplotlib.pyplot as plt
 from tensorflow import keras
 from tensorflow.keras.layers import Dense, Flatten
 from tensorflow.keras.datasets import mnist         # библиотека рукописных цифр
+from sklearn.model_selection import train_test_split # разделение выборонов�
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data() # загруска всех выборок (60000(очучающих)+10000(тестовых)) x_train[i]='рисунок 5' y_train[i]=5
 
 x_train = x_train / 255      # стандартизация входных данных (что бы данные были в диапазоне от 0 до 1 для логичтических функция активации
                              #                                если так не делать то при большой входном значении на нейроне и это может привести к попаданию в пологую область функции
-#                                                             а это область где производная функции близка к нулю и изменение весовых коэф. близко к нулю)
+                             #                                а это область где производная функции близка к нулю и изменение весовых коэф. близко к нулю)
 x_test = x_test / 255
 
 y_train_cat = keras.utils.to_categorical(y_train, 10) # подготавливает данные и преобразовывает цифру в булевый вектор (для 10 синопсов выходного слоя) 5 -> [0,0,0,0,0,1,0,0,0,0]
 y_test_cat = keras.utils.to_categorical(y_test, 10)
+
+size_val = 10000
+x_val_split = x_train[:size_val]
+y_val_split = y_train_cat[:size_val]
+
+x_train_split = x_train[size_val:]
+y_train_split = y_train_cat[size_val:]
 
 #Слой1 (входной) Преобразование рисунков (матрицы) выборок (28*28*pix) в вектор длинной 784 значения
 #Cлой2 128 нейронов и функция активации relu
@@ -27,7 +35,10 @@ print(model.summary())
 
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy']) # оптимизация по adam, ошибки - categorical_crossentropy (лучше использовать для задачах классификации, а на выходе использовать softmax), metrics для вывода метрики
 
-model.fit(x_train, y_train_cat, batch_size=32, epochs=5, validation_split=0.2) # после каждых 32 изображений будут обновляться весовые коеф., 5 проходов, 80%/20% обучение/валидация (проверка что не идет переобучение выборки)
+x_train_split, x_val_split, y_train_split, y_val_split = train_test_split(x_train, y_train_cat, test_size=0.2) # разделение выбороноепроходов на тест случайным образом
+
+#model.fit(x_train, y_train_cat, batch_size=32, epochs=5, validation_split=0.2) # после каждых 32 изображений будут обновляться весовые коеф., 5 проходов, 80%/20% обучение/валидация (проверка что не идет переобучение выборки)
+model.fit(x_train, y_train_cat, batch_size=32, epochs=5, validation_data=(x_val_split, y_val_split)) # после каждых 32 изображений будут обновляться весовые коеф., 5 проходов, 80%/20% обучение/валидация (проверка что не идет переобучение выборки)
 
 model.evaluate(x_test, y_test_cat) # проверка на тестовой выборке
 
