@@ -1,20 +1,23 @@
-from io import BytesIO
-
-import keras.applications
+from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input, decode_predictions
+from tensorflow.keras.preprocessing import image
 import numpy as np
-from PIL import Image
 
-model = keras.applications.VGG16()
+# Загрузка предварительно обученной модели VGG16
+model = VGG16(weights='imagenet')
 
-img = Image.open('pic224.jpg')
-imp = np.array(img) # превращение в массив
-x = keras.applications.vgg16.preprocess_input(img) # получаем массив в нужном цветовом формате и смещениями
-x = np.expand_dims(x, axis=0) # преобразуем в формат необходимый для модели
-y = model.predict(x)
+# Загрузка изображения и предварительная обработка
+img_path = 'pic224.jpg'
+img = image.load_img(img_path, target_size=(224, 224))
+x = image.img_to_array(img)
+x = np.expand_dims(x, axis=0)
+x = preprocess_input(x)
 
-print(y)
-print(type(y))
-with open('types_vgg16.txt', 'r') as file:
-    text = file.read()
-print(text[text.find(str(y)):(text[text.find(str(y)):].find('\n')+text.find(str(y)))])
+# Предсказание класса изображения
+preds = model.predict(x)
+decoded_preds = decode_predictions(preds, top=3)[0]
+
+# Вывод результатов
+for pred in decoded_preds:
+    print(f"Class: {pred[1]}, Probability: {pred[2]}")
+
 
