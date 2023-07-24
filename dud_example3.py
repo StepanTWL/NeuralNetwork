@@ -17,10 +17,10 @@ cv2.waitKey(0)
 import cv2
 import numpy as np
 import imutils
-#import easyocr
+import easyocr
 from matplotlib import pyplot as pl
 
-img = cv2.imread('images/car_1.jpg')
+img = cv2.imread('images/car_2.jpg')
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 img_filter = cv2.bilateralFilter(gray, 11, 15, 15) # диаметр (насколько много пикселей будет охвачено), цветовое пространство (насколько много пикселей с примерно одинаковым цветом будет смешано), координатное пространство (тоже что и 2 только одинаковые по координатам)
@@ -38,7 +38,22 @@ for c in cont:
         break
 
 mask = np.zeros(gray.shape, np.uint8) # маска
+new_img = cv2.drawContours(mask, [pos], 0, 255, -1) #рисование контуров на mask, белый цвет, обвотка - залить всю поверхность
+bitwise_img = cv2.bitwise_and(img, img, mask=mask) # побитовый И
 
+x, y = np.where(mask==255) # вытянуть пиксели которые подходят под маску (white)
+x1, y1 = np.min(x), np.min(y) # найти верхний левый угол этих пикселей
+x2, y2 = np.max(x), np.max(y) # найти нижнии правильный угол этих пикелел
 
-#pl.imshow(cv2.cvtColor(img_edges, cv2.COLOR_BGR2RGB))
-#pl.show()
+crop_img = gray[x1:x2, y1:y2]
+
+text = easyocr.Reader(['en']) # распознавание текста - загрузка модели
+text = text.readtext(crop_img)
+print(text)
+
+res = text[0][-2] # вытянуть последнима значение из результата (наш номер)
+final_image = cv2.putText(img, res, (x1 - 200, y2 + 160), cv2.FONT_HERSHEY_COMPLEX, 3, (0, 0, 255), 2) # рисование текста на изображение
+final_image = cv2.rectangle(img, (x1, x2), (y1, y2), (0, 255, 0), 2) # рисуем рамку вокруг текста
+
+pl.imshow(cv2.cvtColor(final_image, cv2.COLOR_BGR2RGB))
+pl.show()

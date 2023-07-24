@@ -1,3 +1,4 @@
+##################### Прогнозирование символов #####################
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -23,6 +24,23 @@ inp_chars = 6
 data = tokenirez.texts_to_matrix(text) # преобразовывыем текст в матрицу токенов (массив OHE)
 n = data.shape[0] - inp_chars # так как мы предсказываем по шести символам - седьмой
 
-X = np.array([data[i:i + inp_chars, :] for i in range(n)])
+X = np.array([data[i:i + inp_chars, :] for i in range(n)]) # 6 символом используемых для предсказания
 Y = data[inp_chars:] # предсказываемый символ
 
+print(data.shape)
+
+model = Sequential()
+model.add(Input((inp_chars, num_characters))) # при тренировке в рекуррентные модели keras подается вся последовательность
+model.add(SimpleRNN(units=128, activation='tanh')) # рекуррентный слой на 128 нейронов (функция кативации - гипербалический тангенс)
+model.add(Dense(num_characters, activation='softmax')) # полносвязный слой (функция кативации - softmax)
+model.summary()
+
+model.compile(loss='categorical_crossentropy', metrics=['accuracy'],  optimizer='adam') # потери - категориальная кросс ентропия, метрикика - точность,  оптимизатор для градиентного спуска - адам
+
+history = model.fit(X, Y, batch_size=32, epochs=100) # тренеровка модели
+
+def buildPhrase(inp_str, str_len=50):
+    for i in range(str_len):
+        x = []
+        for j in range(i, i + inp_chars):
+            x.append(())
