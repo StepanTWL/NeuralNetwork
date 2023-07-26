@@ -1,4 +1,4 @@
-##################### Прогнозирование слов #####################
+##################### Прогнозирование слов (рекурентные сети RNN) #####################
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -36,7 +36,8 @@ Y = to_categorical(res[inp_words:], num_classes=maxWordsCount)
 # Рекурентная нейронная сеть
 model = Sequential()
 model.add(Embedding(maxWordsCount, 256, input_length = inp_words)) # при тренировке в рекуррентные модели keras подается вся последовательность
-model.add(SimpleRNN(128, activation='tanh')) # рекуррентный слой на 128 нейронов (функция кативации - гипербалический тангенс)
+model.add(SimpleRNN(128, activation='tanh', return_sequences=True)) # рекуррентный слой на 128 нейронов c данными (batch_size, timesteps, units) для следующего рекурентного слоя
+model.add(SimpleRNN(64, activation='tanh')) # рекуррентный слой на 64 нейронов (функция кативации - гипербалический тангенс) с данными (batch_size, units)
 model.add(Dense(maxWordsCount, activation='softmax')) # полносвязный слой (функция кативации - softmax)
 model.summary()
 
